@@ -22,6 +22,7 @@ IMMEDIATELY = 0
 
 # Datagram length in bytes for types that have a fixed size.
 _INT_DGRAM_LEN = 4
+_LONG_DGRAM_LEN = 8
 _FLOAT_DGRAM_LEN = 4
 _DOUBLE_DGRAM_LEN = 8
 _DATE_DGRAM_LEN = _INT_DGRAM_LEN * 2
@@ -124,6 +125,30 @@ def get_int(dgram: bytes, start_index: int) -> Tuple[int, int]:
             start_index + _INT_DGRAM_LEN)
     except (struct.error, TypeError) as e:
         raise ParseError('Could not parse datagram %s' % e)
+
+def get_long(dgram: bytes, start_index: int) -> Tuple[int, int]:
+    """Get a 64-bit big-endian two's complement integer from the datagram.
+
+    Args:
+      dgram: A datagram packet.
+      start_index: An index where the integer starts in the datagram.
+
+    Returns:
+      A tuple containing the integer and the new end index.
+
+    Raises:
+      ParseError if the datagram could not be parsed.
+    """
+    try:
+        if len(dgram[start_index:]) < _LONG_DGRAM_LEN:
+            raise ParseError('Datagram is too short')
+        return (
+            struct.unpack('>q',
+                          dgram[start_index:start_index + _LONG_DGRAM_LEN])[0],
+            start_index + _LONG_DGRAM_LEN)
+    except (struct.error, TypeError) as e:
+        raise ParseError('Could not parse datagram %s' % e)
+
 
 
 def get_ttag(dgram: bytes, start_index: int) -> Tuple[datetime, int]:
